@@ -1,0 +1,1 @@
+lambda_execution_role_arn = "arn:aws:iam::820595807746:role/LabRole"
