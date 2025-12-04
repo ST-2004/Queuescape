@@ -9,8 +9,8 @@ def lambda_handler(event, context):
     try:
         body = json.loads(event.get('body', '{}'))
         ticket_number = body.get('ticketNumber')
-        queue_id = "main_queue"
-        
+        queue_id = body.get('queueId', 'main_queue')  
+              
         if not ticket_number:
             return {'statusCode': 400, 'body': json.dumps({'error': 'ticketNumber required'})}
 

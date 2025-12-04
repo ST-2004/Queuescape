@@ -50,8 +50,7 @@ def get_wait_time_per_person(queue_id):
 def lambda_handler(event, context):
     try:
         ticket_number = event['pathParameters']['ticketNumber']
-        queue_id = "main_queue"
-
+        queue_id = event['pathParameters'].get('queueId', 'main_queue')
         # 1. Get Ticket
         response = entries_table.get_item(Key={'queueId': queue_id, 'ticketNumber': ticket_number})
         if 'Item' not in response:

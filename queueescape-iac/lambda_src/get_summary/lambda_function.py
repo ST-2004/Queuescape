@@ -15,8 +15,8 @@ class DecimalEncoder(json.JSONEncoder):
 
 def lambda_handler(event, context):
     try:
-        queue_id = "main_queue"
-        
+        params = event.get('queryStringParameters') or {}
+        queue_id = params.get('queueId', 'main_queue')        
         # Scan for everyone not completed
         # valid statuses: WAITING, BEING_SERVED
         response = table.scan(

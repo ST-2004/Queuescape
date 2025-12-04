@@ -17,8 +17,8 @@ class DecimalEncoder(json.JSONEncoder):
 
 def lambda_handler(event, context):
     try:
-        queue_id = "main_queue"
-        
+        body = json.loads(event.get('body', '{}'))
+        queue_id = body.get('queueId', 'main_queue')        
         # 1. Find oldest WAITING ticket
         scan_resp = table.scan(
             FilterExpression=Key('status').eq('WAITING') & Key('queueId').eq(queue_id)

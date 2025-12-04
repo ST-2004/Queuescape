@@ -15,7 +15,7 @@ def lambda_handler(event, context):
         email = body.get('email', '')
         
         # Generate Ticket Details
-        queue_id = "main_queue"
+        queue_id = body.get('queueId', 'main_queue')
         ticket_number = str(uuid.uuid4())[:8]
         
         # FIX: Multiply by 1,000,000 to get microseconds. 
