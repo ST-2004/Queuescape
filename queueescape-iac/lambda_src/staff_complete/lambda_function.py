@@ -24,8 +24,18 @@ def lambda_handler(event, context):
         
         return {
             'statusCode': 200,
-            'headers': {'Access-Control-Allow-Origin': '*'},
+            "headers": {
+                    "Access-Control-Allow-Origin": "*",  # or "http://localhost:3000"
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+                    "Content-Type": "application/json"},
             'body': json.dumps({'message': 'Ticket completed', 'ticketNumber': ticket_number})
         }
     except Exception as e:
-        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",  # or "http://localhost:3000"
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Methods": "OPTIONS,GET,POST",
+                    "Content-Type": "application/json"},
+                'body': json.dumps({'error': str(e)})}
