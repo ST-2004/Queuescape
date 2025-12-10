@@ -12,8 +12,16 @@ def lambda_handler(event, context):
         queue_id = body.get('queueId', 'main_queue')  
               
         if not ticket_number:
-            return {'statusCode': 400, 'body': json.dumps({'error': 'ticketNumber required'})}
-
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'OPTIONS,GET,POST',
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({'error': 'ticketNumber required'})
+            }
         # Update Status to COMPLETED
         table.update_item(
             Key={'queueId': queue_id, 'ticketNumber': ticket_number},

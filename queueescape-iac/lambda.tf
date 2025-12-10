@@ -51,8 +51,22 @@ resource "aws_lambda_function" "join_queue" {
   filename         = data.archive_file.join_queue.output_path
   source_code_hash = data.archive_file.join_queue.output_base64sha256
 
+  timeout = 60
+  memory_size = 512
+
   environment {
-    variables = local.lambda_env
+    variables = merge(
+      local.lambda_env,
+      { LOG_LEVEL = "DEBUG" }
+    )
+  }
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_a.id,
+      aws_subnet.private_b.id
+    ]
+    security_group_ids = [aws_security_group.lambda_sg.id]
   }
 }
 
@@ -65,8 +79,22 @@ resource "aws_lambda_function" "get_status" {
   filename         = data.archive_file.get_status.output_path
   source_code_hash = data.archive_file.get_status.output_base64sha256
 
+  timeout = 60
+  memory_size = 512
+
   environment {
-    variables = local.lambda_env
+    variables = merge(
+      local.lambda_env,
+      { LOG_LEVEL = "DEBUG" }
+    )
+  }
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_a.id,
+      aws_subnet.private_b.id
+    ]
+    security_group_ids = [aws_security_group.lambda_sg.id]
   }
 }
 
@@ -79,8 +107,22 @@ resource "aws_lambda_function" "get_summary" {
   filename         = data.archive_file.get_summary.output_path
   source_code_hash = data.archive_file.get_summary.output_base64sha256
 
+  timeout = 60
+  memory_size = 512
+
   environment {
-    variables = local.lambda_env
+    variables = merge(
+      local.lambda_env,
+      { LOG_LEVEL = "DEBUG" }
+    )
+  }
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_a.id,
+      aws_subnet.private_b.id
+    ]
+    security_group_ids = [aws_security_group.lambda_sg.id]
   }
 }
 
@@ -93,8 +135,22 @@ resource "aws_lambda_function" "staff_next" {
   filename         = data.archive_file.staff_next.output_path
   source_code_hash = data.archive_file.staff_next.output_base64sha256
 
+  timeout = 60
+  memory_size = 512
+
   environment {
-    variables = local.lambda_env
+    variables = merge(
+      local.lambda_env,
+      { LOG_LEVEL = "DEBUG" }
+    )
+  }
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_a.id,
+      aws_subnet.private_b.id
+    ]
+    security_group_ids = [aws_security_group.lambda_sg.id]
   }
 }
 
@@ -107,8 +163,22 @@ resource "aws_lambda_function" "staff_complete" {
   filename         = data.archive_file.staff_complete.output_path
   source_code_hash = data.archive_file.staff_complete.output_base64sha256
 
+  timeout = 60
+  memory_size = 512
+
   environment {
-    variables = local.lambda_env
+    variables = merge(
+      local.lambda_env,
+      { LOG_LEVEL = "DEBUG" }
+    )
+  }
+
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_a.id,
+      aws_subnet.private_b.id
+    ]
+    security_group_ids = [aws_security_group.lambda_sg.id]
   }
 }
 
@@ -120,7 +190,21 @@ resource "aws_lambda_function" "set_settings" {
   filename      = data.archive_file.set_settings.output_path
   source_code_hash = data.archive_file.set_settings.output_base64sha256
 
+  timeout = 60
+  memory_size = 512
+
   environment {
-    variables = local.lambda_env
+    variables = merge(
+      local.lambda_env,
+      { LOG_LEVEL = "DEBUG" }
+    )
+  }
+
+ vpc_config {
+    subnet_ids = [
+      aws_subnet.private_a.id,
+      aws_subnet.private_b.id
+    ]
+    security_group_ids = [aws_security_group.lambda_sg.id]
   }
 }

@@ -46,10 +46,10 @@ resource "aws_api_gateway_method" "options_queue_join" {
 }
 
 resource "aws_api_gateway_integration" "options_queue_join_integration" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  resource_id = aws_api_gateway_resource.queue_join.id
-  http_method = aws_api_gateway_method.options_queue_join.http_method
-  type        = "MOCK"
+  rest_api_id             = aws_api_gateway_rest_api.queueescape.id
+  resource_id             = aws_api_gateway_resource.queue_join.id
+  http_method             = aws_api_gateway_method.options_queue_join.http_method
+  type                    = "MOCK"
   integration_http_method = "POST"
 
   request_templates = {
@@ -83,8 +83,9 @@ resource "aws_api_gateway_integration_response" "options_queue_join_200" {
   depends_on = [
     aws_api_gateway_integration.options_queue_join_integration
   ]
+
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # or "'*'" for dev
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'*'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -97,6 +98,27 @@ resource "aws_api_gateway_integration_response" "options_queue_join_200" {
 ###############################################
 # CORS for GET /queue/status/{queueId}/{ticketNumber}
 ###############################################
+
+# /queue/status
+resource "aws_api_gateway_resource" "queue_status" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue.id
+  path_part   = "status"
+}
+
+# /queue/status/{queueId}
+resource "aws_api_gateway_resource" "queue_status_queue_id" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue_status.id
+  path_part   = "{queueId}"
+}
+
+# /queue/status/{queueId}/{ticketNumber}
+resource "aws_api_gateway_resource" "queue_status_ticket_number" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue_status_queue_id.id
+  path_part   = "{ticketNumber}"
+}
 
 resource "aws_api_gateway_method" "options_status" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
@@ -156,8 +178,24 @@ resource "aws_api_gateway_integration_response" "options_status_200" {
 }
 
 ###########################################
+# Staff base resource: /queue/staff
+###########################################
+
+resource "aws_api_gateway_resource" "queue_staff" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue.id
+  path_part   = "staff"
+}
+
+###########################################
 # CORS for GET /queue/staff/summary
 ###########################################
+
+resource "aws_api_gateway_resource" "queue_staff_summary" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue_staff.id
+  path_part   = "summary"
+}
 
 resource "aws_api_gateway_method" "options_staff_summary" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
@@ -220,6 +258,12 @@ resource "aws_api_gateway_integration_response" "options_staff_summary_200" {
 # CORS for POST /queue/staff/next
 ###########################################
 
+resource "aws_api_gateway_resource" "queue_staff_next" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue_staff.id
+  path_part   = "next"
+}
+
 resource "aws_api_gateway_method" "options_staff_next" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_next.id
@@ -280,6 +324,12 @@ resource "aws_api_gateway_integration_response" "options_staff_next_200" {
 ###########################################
 # CORS for POST /queue/staff/complete
 ###########################################
+
+resource "aws_api_gateway_resource" "queue_staff_complete" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue_staff.id
+  path_part   = "complete"
+}
 
 resource "aws_api_gateway_method" "options_staff_complete" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
@@ -342,6 +392,12 @@ resource "aws_api_gateway_integration_response" "options_staff_complete_200" {
 # CORS for POST /queue/staff/settings
 ###########################################
 
+resource "aws_api_gateway_resource" "queue_staff_settings" {
+  rest_api_id = aws_api_gateway_rest_api.queueescape.id
+  parent_id   = aws_api_gateway_resource.queue_staff.id
+  path_part   = "settings"
+}
+
 resource "aws_api_gateway_method" "options_staff_settings" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_settings.id
@@ -400,6 +456,10 @@ resource "aws_api_gateway_integration_response" "options_staff_settings_200" {
 }
 
 
+###############################################
+# Lambda Integrations & Logic
+###############################################
+
 resource "aws_api_gateway_integration" "post_join_lambda" {
   rest_api_id             = aws_api_gateway_rest_api.queueescape.id
   resource_id             = aws_api_gateway_resource.queue_join.id
@@ -407,32 +467,6 @@ resource "aws_api_gateway_integration" "post_join_lambda" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.join_queue.invoke_arn
-}
-
-###############################################
-# 2) GET /queue/status/{queueId}/{ticketNumber}
-#    -> GetStatusLambda
-###############################################
-
-# /queue/status
-resource "aws_api_gateway_resource" "queue_status" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue.id
-  path_part   = "status"
-}
-
-# /queue/status/{queueId}
-resource "aws_api_gateway_resource" "queue_status_queue_id" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue_status.id
-  path_part   = "{queueId}"
-}
-
-# /queue/status/{queueId}/{ticketNumber}
-resource "aws_api_gateway_resource" "queue_status_ticket_number" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue_status_queue_id.id
-  path_part   = "{ticketNumber}"
 }
 
 resource "aws_api_gateway_method" "get_status" {
@@ -451,26 +485,6 @@ resource "aws_api_gateway_integration" "get_status_lambda" {
   uri                     = aws_lambda_function.get_status.invoke_arn
 }
 
-###########################################
-# Staff base resource: /queue/staff
-###########################################
-
-resource "aws_api_gateway_resource" "queue_staff" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue.id
-  path_part   = "staff"
-}
-
-###########################################
-# 3) GET /queue/staff/summary -> GetSummaryLambda
-###########################################
-
-resource "aws_api_gateway_resource" "queue_staff_summary" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue_staff.id
-  path_part   = "summary"
-}
-
 resource "aws_api_gateway_method" "get_staff_summary" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_summary.id
@@ -485,16 +499,6 @@ resource "aws_api_gateway_integration" "get_staff_summary_lambda" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.get_summary.invoke_arn
-}
-
-###########################################
-# 4) POST /queue/staff/next -> StaffNextLambda
-###########################################
-
-resource "aws_api_gateway_resource" "queue_staff_next" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue_staff.id
-  path_part   = "next"
 }
 
 resource "aws_api_gateway_method" "post_staff_next" {
@@ -513,16 +517,6 @@ resource "aws_api_gateway_integration" "post_staff_next_lambda" {
   uri                     = aws_lambda_function.staff_next.invoke_arn
 }
 
-#############################################
-# 5) POST /queue/staff/complete -> StaffCompleteLambda
-#############################################
-
-resource "aws_api_gateway_resource" "queue_staff_complete" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue_staff.id
-  path_part   = "complete"
-}
-
 resource "aws_api_gateway_method" "post_staff_complete" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_complete.id
@@ -537,6 +531,22 @@ resource "aws_api_gateway_integration" "post_staff_complete_lambda" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.staff_complete.invoke_arn
+}
+
+resource "aws_api_gateway_method" "post_staff_settings" {
+  rest_api_id   = aws_api_gateway_rest_api.queueescape.id
+  resource_id   = aws_api_gateway_resource.queue_staff_settings.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "post_staff_settings_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.queueescape.id
+  resource_id             = aws_api_gateway_resource.queue_staff_settings.id
+  http_method             = aws_api_gateway_method.post_staff_settings.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.set_settings.invoke_arn
 }
 
 ###########################################
@@ -583,6 +593,14 @@ resource "aws_lambda_permission" "apigw_staff_complete" {
   source_arn    = "${aws_api_gateway_rest_api.queueescape.execution_arn}/*/*"
 }
 
+resource "aws_lambda_permission" "apigw_staff_settings" {
+  statement_id  = "AllowAPIGatewayInvokeStaffSettings"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.set_settings.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.queueescape.execution_arn}/*/*"
+}
+
 ###########################################
 # Deployment + Stage
 ###########################################
@@ -590,17 +608,26 @@ resource "aws_lambda_permission" "apigw_staff_complete" {
 resource "aws_api_gateway_deployment" "queueescape_deployment" {
   rest_api_id = aws_api_gateway_rest_api.queueescape.id
 
-  # Force new deployment when API definition changes
+  # TRIGGER: IMPORTANT - Re-deploys when THIS file changes (via SHA1 hash)
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.queueescape))
+    redeployment = filesha1("${path.module}/apigateway.tf")
   }
 
+  # THIS IS THE KEY FIX - Prevents deployment state issues
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  # Ensure all endpoints and options are created before deployment
   depends_on = [
     aws_api_gateway_integration.post_join_lambda,
     aws_api_gateway_integration.get_status_lambda,
     aws_api_gateway_integration.get_staff_summary_lambda,
     aws_api_gateway_integration.post_staff_next_lambda,
     aws_api_gateway_integration.post_staff_complete_lambda,
+    aws_api_gateway_integration.post_staff_settings_lambda,
+    
+    # Options Integrations
     aws_api_gateway_integration.options_queue_join_integration,
     aws_api_gateway_integration.options_status_integration,
     aws_api_gateway_integration.options_staff_summary_integration,
@@ -616,37 +643,27 @@ resource "aws_api_gateway_stage" "dev" {
   stage_name    = "dev"
 }
 
-# Resource: /queue/staff/settings
-resource "aws_api_gateway_resource" "queue_staff_settings" {
-  rest_api_id = aws_api_gateway_rest_api.queueescape.id
-  parent_id   = aws_api_gateway_resource.queue_staff.id
-  path_part   = "settings"
-}
-
-resource "aws_api_gateway_method" "post_staff_settings" {
-  rest_api_id   = aws_api_gateway_rest_api.queueescape.id
-  resource_id   = aws_api_gateway_resource.queue_staff_settings.id
-  http_method   = "POST"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "post_staff_settings_lambda" {
-  rest_api_id             = aws_api_gateway_rest_api.queueescape.id
-  resource_id             = aws_api_gateway_resource.queue_staff_settings.id
-  http_method             = aws_api_gateway_method.post_staff_settings.http_method
-  type                    = "AWS_PROXY"
-  integration_http_method = "POST"
-  uri                     = aws_lambda_function.set_settings.invoke_arn
-}
-
-resource "aws_lambda_permission" "apigw_staff_settings" {
-  statement_id  = "AllowAPIGatewayInvokeStaffSettings"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.set_settings.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.queueescape.execution_arn}/*/*"
-}
-
 output "queueescape_invoke_url" {
   value = "https://${aws_api_gateway_rest_api.queueescape.id}.execute-api.us-east-1.amazonaws.com/${aws_api_gateway_stage.dev.stage_name}"
+}
+
+# Gateway Responses for proper CORS on errors
+resource "aws_api_gateway_gateway_response" "default_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.queueescape.id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'*'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default_5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.queueescape.id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'*'"
+  }
 }
