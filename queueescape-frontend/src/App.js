@@ -55,16 +55,22 @@ export function useAuthReady() {
   return ready;
 }
 
+
 async function getAuthHeader() {
   const session = await fetchAuthSession();
-  const accessToken = session.tokens?.accessToken?.toString();
+  const idToken = session.tokens?.idToken?.toString();
 
-  if (!accessToken) {
+  console.log('=== AUTH DEBUG ===');
+  console.log('ID Token:', idToken);
+  console.log('Token starts with:', idToken?.substring(0, 20));
+
+  if (!idToken) {
     throw new Error('No access token found');
   }
 
   return {
-    Authorization: `Bearer ${accessToken}`
+    Authorization: `Bearer ${idToken
+    }`
   };
 }
 
