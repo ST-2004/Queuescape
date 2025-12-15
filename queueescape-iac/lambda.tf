@@ -34,11 +34,19 @@ data "archive_file" "set_settings" {
   output_path = "${path.module}/lambda_src/set_settings.zip"
 }
 
+data "archive_file" "send_notifications" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_src/send_notifications"
+  output_path = "${path.module}/lambda_src/send_notifications.zip"
+}
+
 locals {
   lambda_env = {
-    QUEUE_ENTRIES_TABLE = "QueueEntries"
-    QUEUE_STATS_TABLE   = "QueueStats"
-    ALERTS_TOPIC_ARN    = aws_sns_topic.alerts.arn
+    QUEUE_ENTRIES_TABLE      = "QueueEntries"
+    QUEUE_STATS_TABLE        = "QueueStats"
+    USER_NOTIFICATIONS_TABLE = "UserNotifications"
+    ALERTS_TOPIC_ARN         = aws_sns_topic.alerts.arn
+    NOTIFICATION_THRESHOLDS  = "50,40,30,20,10,5,3,1"  # Configurable milestones
   }
 }
 
@@ -200,7 +208,34 @@ resource "aws_lambda_function" "set_settings" {
     )
   }
 
- vpc_config {
+  vpc_config {
+    subnet_ids = [
+      aws_subnet.private_a.id,
+      aws_subnet.private_b.id
+    ]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+}
+
+resource "aws_lambda_function" "send_notifications" {
+  function_name = "SendNotificationsLambda"
+  role          = var.lambda_execution_role_arn
+  runtime       = "python3.12"
+  handler       = "lambda_function.lambda_handler"
+  filename      = data.archive_file.send_notifications.output_path
+  source_code_hash = data.archive_file.send_notifications.output_base64sha256
+
+  timeout = 60
+  memory_size = 512
+
+  environment {
+    variables = merge(
+      local.lambda_env,
+      { LOG_LEVEL = "DEBUG" }
+    )
+  }
+
+  vpc_config {
     subnet_ids = [
       aws_subnet.private_a.id,
       aws_subnet.private_b.id

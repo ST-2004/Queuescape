@@ -489,7 +489,8 @@ resource "aws_api_gateway_method" "get_staff_summary" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_summary.id
   http_method   = "GET"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "get_staff_summary_lambda" {
@@ -505,7 +506,8 @@ resource "aws_api_gateway_method" "post_staff_next" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_next.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "post_staff_next_lambda" {
@@ -521,7 +523,8 @@ resource "aws_api_gateway_method" "post_staff_complete" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_complete.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "post_staff_complete_lambda" {
@@ -537,7 +540,8 @@ resource "aws_api_gateway_method" "post_staff_settings" {
   rest_api_id   = aws_api_gateway_rest_api.queueescape.id
   resource_id   = aws_api_gateway_resource.queue_staff_settings.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito_authorizer.id
 }
 
 resource "aws_api_gateway_integration" "post_staff_settings_lambda" {
@@ -633,7 +637,9 @@ resource "aws_api_gateway_deployment" "queueescape_deployment" {
     aws_api_gateway_integration.options_staff_summary_integration,
     aws_api_gateway_integration.options_staff_next_integration,
     aws_api_gateway_integration.options_staff_complete_integration,
-    aws_api_gateway_integration.options_staff_settings_integration
+    aws_api_gateway_integration.options_staff_settings_integration,
+
+    aws_api_gateway_authorizer.cognito_authorizer
   ]
 }
 
@@ -666,4 +672,16 @@ resource "aws_api_gateway_gateway_response" "default_5xx" {
     "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
     "gatewayresponse.header.Access-Control-Allow-Headers" = "'*'"
   }
+}
+
+resource "aws_api_gateway_gateway_response" "unauthorized" {
+  rest_api_id   = aws_api_gateway_rest_api.queueescape.id
+  response_type = "UNAUTHORIZED"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'*'"
+  }
+
+  status_code = "401"
 }

@@ -1,9 +1,16 @@
 resource "aws_sns_topic" "alerts" {
   name = "queueescape-alerts"
+  display_name = "QueueEscape Notifications"
+
+  tags = {
+    Name = "queueescape-alerts"
+  }
 }
 
-resource "aws_sns_topic_subscription" "alerts_email" {
-  topic_arn = aws_sns_topic.alerts.arn
-  protocol  = "email"
-  endpoint  = "your-email@example.com"
+# This is a general topic for system alerts
+# User-specific topics will be created dynamically by Lambda
+
+output "alerts_topic_arn" {
+  value       = aws_sns_topic.alerts.arn
+  description = "ARN of the alerts SNS topic"
 }
